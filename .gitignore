@@ -1,7 +1,11 @@
 brute
 gen
+bruteN2
 testy_mess/
 trash/
 testy/
 wzo
 wzo.dSYM/
+.vscode
+check_bn2.sh
+testy_mess2/
