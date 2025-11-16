@@ -9,3 +9,6 @@ wzo.dSYM/
 .vscode
 check_bn2.sh
 testy_mess2/
+wzo3.dSYM/
+check_trz3.sh
+wzo3

@@ -2,12 +2,12 @@ gcc @opcje_mac trz2.c -o wzo
 g++ -std=c++20 brute_n2.cpp -o bruteN2
 g++ -std=c++20 gen.cpp -o gen
 
-ile=4000
-dir=testy/big
+ile=30000
+dir=testy/small
 
 echo "$dir $ile"
 
-for((i=3000;i<ile;i++))
+for((i=20000;i<ile;i++))
 do
     echo "test $i"
     ./gen > trash/t
@@ -23,6 +23,6 @@ do
     echo "OK"
     echo ""
 
-    #cp trash/t $dir/$i.in
-    #cp trash/t.wzo $dir/$i.out
+    cp trash/t $dir/$i.in
+    cp trash/t.wzo $dir/$i.out
 done
