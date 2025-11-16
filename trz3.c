@@ -6,6 +6,8 @@
 //time: O(n)
 //memory: O(n)
 
+//in the code I renamed "motel" to "hotel", and "net" of hotel to "type" of hotel
+
 //in comments I often use nomenclature "on the left", "on the right"
 //left means hotels that have distance closer to 0
 //right means hotel that have distance close to MAX_DISTANCE
@@ -19,27 +21,28 @@
 //and order = -1 means we're dealing with minimum
 
 
-int max(int x, int y){
+typedef enum {
+    INCREASING = 1,
+    DECREASING = -1
+} order_type;
+
+static inline int max(int x, int y){
     if(x > y)
         return x;
     return y;
 }
-int min(int x, int y){
+static inline int min(int x, int y){
     if(x < y)
         return x;
     return y;
 }
-int minmax(int x, int y, int order){
-    if(order == 1){
+static inline int minmax(int x, int y, order_type order){
+    if(order == INCREASING)
         return max(x, y);
-    }
     return min(x, y);
 }
-int abs(int x){
-    return max(x, -x);
-}
 
-//struct of motel
+//struct of hotel
 //type - site of hotel
 //dist - distance
 typedef struct hotel {
@@ -51,7 +54,7 @@ void hotel_print(hotel h){
     printf("(%d, %d)\n", h.type, h.dist);
 }
 
-hotel* create_tab(int size){
+hotel* hotel_create_array(int size){
     hotel* result = (hotel*) malloc((size_t) size * sizeof(hotel));
     if(!result){
         printf("[MALLOC ERROR] error while creating table for size = %d\n", size);
@@ -96,8 +99,8 @@ void set_assert(set3* set){
 
 //prints set->maxi if order = 1
 //and set->mini otherwise
-void set3_print(set3* set, int order){
-    hotel* tab = (order == 1 ? set->maxi : set->mini);
+void set3_print(set3* set, order_type order){
+    hotel* tab = (order == INCREASING ? set->maxi : set->mini);
     for(int i = 0; i < 3; i++){
         hotel_print(tab[i]);
     }
@@ -107,7 +110,7 @@ void set3_print(set3* set, int order){
 //bubble sort
 //Im using it only for n = 3, 
 //so it does not affect time complexity
-void sort(hotel* tab, int n, int order){
+static void sort_hotels(hotel* tab, int n, order_type order){
     for(int i = 0; i < n; i++){
         for(int j = 0; j < n - 1; j++){
             if(tab[j].dist * order > tab[j + 1].dist * order){
@@ -120,14 +123,14 @@ void sort(hotel* tab, int n, int order){
 }
 
 //is h2 better than h1 in given order
-//(in terms: would we like replace h1 with h2 in set->mini/maxi)
-bool better(hotel h1, hotel h2, int order){
+//(in terms: would we like to replace h1 with h2 in set->mini/maxi)
+bool better(hotel h1, hotel h2, order_type order){
     return h1.type == -1 || h1.dist * order <= h2.dist * order;
 }
 
 //inserts elements into set3
 //order specifies whetever we're inserting element into maxi[] or mini[]
-void set3_insert(set3* set, hotel element, int order){
+void set3_insert(set3* set, hotel element, order_type order){
     set_assert(set);
 
     int to_replace_ind = 0;
@@ -138,7 +141,7 @@ void set3_insert(set3* set, hotel element, int order){
     //which will be at 0 index in maxi[] (increasing order) or 2 in mini[] (decreasing order)
     //otherwise we will be replacing index 0 (in maxi[] it's smallest distance)
     //(and in mini[] its biggest distance)
-    if(order == 1){
+    if(order == INCREASING){
         tab = set->maxi;
     }
     else {
@@ -157,18 +160,18 @@ void set3_insert(set3* set, hotel element, int order){
     }
     //we need to sort the array which we changed, to preserve properties of set
     //that array has 3 elements, so it's O(1)
-    sort(tab, 3, order);
+    sort_hotels(tab, 3, order);
 }
-//this function returns to greatest elements (which types different from current type)
+//this function returns to greatest elements (which types are different from current type)
 //in given order from set3
 //and writes them into variables h1 and h2
-void get_diff(set3* set, hotel* h1, hotel* h2, int curr_type, int order){
+void get_diff(set3* set, hotel* h1, hotel* h2, int curr_type, order_type order){
     set_assert(set);
 
     int how_many_set = 0;
     hotel* tab;
 
-    if(order == 1){
+    if(order == INCREASING){
         tab = set->maxi;
     }
     else {
@@ -201,9 +204,9 @@ void get_diff(set3* set, hotel* h1, hotel* h2, int curr_type, int order){
     }
 }
 
-//this functions improve result with distances between hotels h1, h2, h3
+//this functions improves result with distances between hotels h1, h2, h3
 //in terms of given order
-void improve_res(hotel h1, hotel h2, hotel h3, int* result, int order){
+void improve_res(hotel h1, hotel h2, hotel h3, int* result, order_type order){
     if(h1.type == -1 || h3.type == -1 || h1.type == h3.type){
         return;
     }
@@ -219,13 +222,13 @@ void improve_res(hotel h1, hotel h2, hotel h3, int* result, int order){
     }
 }
 
-//this function find biggest/smallest distance between three hotels of different types
+//this function finds biggest/smallest distance between three hotels of different types
 //depending on given order
-int get_result(hotel* road, int n, int order){
+int get_result(hotel* road, int n, order_type order){
     int result = -1;
 
-    hotel* left1 = create_tab(n);
-    hotel* left2 = create_tab(n);
+    hotel* left1 = hotel_create_array(n);
+    hotel* left2 = hotel_create_array(n);
     //if order = -1, then left1[i], left2[i] are hotels of different types on the left closest to i-th hotel
     //if order = 1, then they are hotels on left farthest from i-th hotel
 
@@ -265,12 +268,20 @@ int main(void){
     int n;
     scanf("%d", &n);
 
-    hotel* road = create_tab(n);
+    hotel* road = hotel_create_array(n);
+    int last_dist = 0;
     for(int i = 0; i < n; i++){
         scanf("%d %d", &road[i].type, &road[i].dist);
+
+        //checking if condition of increasing distances is held
+        assert(last_dist <= road[i].dist);
+        last_dist = road[i].dist;
+        
+        //checking if types of hotels are in range [1, n]
+        assert(1 <= road[i].type && road[i].type <= n);
     }
     
-    printf("%d %d\n", get_result(road, n, -1), get_result(road, n, 1));
+    printf("%d %d\n", get_result(road, n, DECREASING), get_result(road, n, INCREASING));
 
     free(road);
     return 0;
